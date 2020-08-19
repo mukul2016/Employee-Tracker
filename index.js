@@ -1,10 +1,99 @@
 const inquirer = require('inquirer')
+const mysql = require('mysql2')
+// const mysql = require('mysql2/promise')
 
-// View employees, view departments, view roles, add employee, add department, add role, update role, update manager,
-// view employees by manager, delete employee, delete role, delete department, quit
+// Creates the connection to database
+const connection = mysql.createConnection({
+  host: 'localhost',
+  port: 3306,
+  // Your MySQL username
+  user: 'root',
+  // Your MySQL password
+  password: '',
+  database: 'employee_db'
+})
 
-// This function generates the top-level choices for the user.  Upon selecting any of them, a new function is executed
-// specific to that choice.  Upon completion of the selected task, this function is called once again.
+connection.connect(err => {
+  if (err) throw err
+  console.log('connected as id ' + connection.threadId)
+})
+
+async function addEmployeeMenu () {
+  let answers = await inquirer.prompt([
+    {
+      name: 'firstName',
+      message: "What is the employee's first name?"
+    },
+    {
+      name: 'LastName',
+      message: "What is the employee's last name?"
+    },
+    {
+      name: 'empRole',
+      message: "What is the employee's role?"
+    },
+    {
+      name: 'empMgr',
+      message: "Who is the employee's manager?"
+    }
+  ])
+  // .then(answers => {
+  console.info('Answers:', answers)
+  return answers
+  // })
+}
+async function viewAllEmployees () {
+  // SELECT * FROM employee;
+  let query = 'SELECT * FROM employee'
+  await connection.query(query, function (error, results, fields) {
+    if (error) throw error
+  })
+  console.table(results)
+}
+async function addAnEmpIntoDB (firstName, lastName, roleId, empMgr) {
+  // firstName = answers.firstName
+  // lastName = answers.lastName
+  // roleId = answers.roleId
+
+  // console.log(answers)
+  console.log(firstName)
+  console.log(lastName)
+  console.log(roleId)
+  console.log(empMgr)
+
+  let query =
+      'INSERT INTO employee (first_name, last_name, role_id, manager_id) \
+      VALUES (?, ?, ?, ?)',
+    [firstName, lastName, roleId, empMgr]
+
+  await connection.query(query, function (error, results, fields) {})
+  console.table(results)
+}
+
+async function addAnEmployee () {
+  try {
+    let answers = await addEmployeeMenu()
+
+    console.info('Answers in addAnEmployee', answers)
+    let ans = Object.values(answers)
+    const [firstName, lastName, roleId, empMgr] = ans
+
+    // let firstName = answers.firstName
+    // let lastName = answers.lastName
+    // let roleId = answers.roleId
+
+    console.log(answers)
+    console.log(firstName)
+    console.log(lastName)
+    console.log(roleId)
+    console.log(empMgr)
+
+    let result = await addAnEmpIntoDB(firstName, lastName, roleId, empMgr)
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 function mainMenu () {
   console.log('Welcome to the Employee Tracker!\n')
   inquirer
@@ -12,82 +101,34 @@ function mainMenu () {
       type: 'list',
       message: 'Choose what you would like to do',
       choices: [
-        'View employees',
-        'View departments',
-        'View roles',
-        'Add employee',
-        'Add department',
-        'Add role',
-        'Update role',
-        'Update manager',
-        'Display employees by manager',
-        'Delete an employee',
-        'Delete a role',
-        'Delete a department',
-        'View utilized budget for a department',
+        'view all departments',
+        'view all roles',
+        'view all employees',
+        'add a department',
+        'add a role',
+        'add an employee',
+        'update an employee role',
         'Quit'
       ],
       name: 'choice'
     })
     .then(function ({ choice }) {
-      if (choice === 'View employees') {
-        // orm.viewEmployees().then(function () {
-        console.log('\n')
+      if (choice === 'view all employees') {
+        viewAllEmployees().then(function () {
+          mainMenu()
+        })
+      } else if (choice === 'view all departments') {
         mainMenu()
-        // })
-      } else if (choice === 'View departments') {
-        // orm.viewDepartments().then(function () {
-        console.log('\n')
+      } else if (choice === 'view all roles') {
         mainMenu()
-        // })
-      } else if (choice === 'View roles') {
-        // orm.viewRoles().then(function () {
-        console.log('\n')
-        mainMenu()
-        // })
-      } else if (choice === 'Add employee') {
-        console.log('Add employee\n')
-        // addEmployeePrompt()
-      } else if (choice === 'Add department') {
-        console.log('Add department\n')
-
-        // addDepartmentPrompt()
-      } else if (choice === 'Add role') {
-        console.log('Add role\n')
-
-        // addRolePrompt()
-      } else if (choice === 'Update role') {
-        console.log('Update role\n')
-
-        // updateRolePrompt()
-      } else if (choice === 'Update manager') {
-        console.log('Update manager\n')
-
-        // updateManagerPrompt()
-      } else if (choice === 'Display employees by manager') {
-        console.log('Display employee by manager\n')
-
-        // displayByMgrPrompt()
-      } else if (choice === 'Delete an employee') {
-        console.log('Delete an employee \n')
-
-        // deleteEmployeePrompt()
-      } else if (choice === 'Delete a role') {
-        console.log('Delete a role\n')
-
-        // deleteRolePrompt()
-      } else if (choice === 'Delete a department') {
-        console.log('Delete a department \\n')
-
-        // deleteDepartmentPrompt()
-      } else if (choice === 'View utilized budget for a department') {
-        console.log('View utilized budget for a department\n')
-
-        // displayUtilizedBudgetPrompt()
+      } else if (choice === 'add an employee') {
+        addAnEmployee()
+        // addEmployeeMenu()
+      } else if (choice === 'add a department') {
+      } else if (choice === 'add a role') {
+      } else if (choice === 'update an employee role') {
       } else {
         console.log('End connection\n')
-
-        // orm.endConnection()
       }
     })
 }

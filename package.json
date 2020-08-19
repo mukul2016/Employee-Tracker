@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/mukul2016/Employee-Tracker#readme",
   "dependencies": {
-    "inquirer": "^7.3.3"
+    "inquirer": "^7.3.3",
+    "mysql2": "^2.1.0"
   }
 }
